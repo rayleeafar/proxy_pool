@@ -244,6 +244,26 @@ class GetFreeProxy(object):
                 if index == 0:
                     continue
                 yield ":".join(tr.xpath("./td/text()")[0:2]).strip()
+########################################################################
+### Ray add more web
+########################################################################
+    @staticmethod
+    def freeProxyRay01(page_count=1):
+        """
+        http://www.xsdaili.com/index.php?s=/index/index.html
+        免费代理库
+        /html/body/div[5]/div/div[2]/div/div/div/div[2]/div/div[2]/div[1]/div[1]/a
+        :return:
+        """
+        url = 'http://www.xsdaili.com/index.php?s=/index/index.html'
+        print("Ray01")
+        html_tree = getHtmlTree(url)
+        print(html_tree)
+        for aurl in enumerate(html_tree.xpath("//a/@href")):
+            if "dayProxy" not in aurl:
+                continue
+            print(aurl)
+            yield aurl.strip()
 
     # @staticmethod
     # def freeProxy10():
@@ -334,8 +354,10 @@ if __name__ == '__main__':
     # CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy06)
     # CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy07)
     # CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy08)
-    CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy09)
+    # CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy09)
     # CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy13)
     # CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxy14)
 
-    # CheckProxy.checkAllGetProxyFunc()
+    CheckProxy.checkGetProxyFunc(GetFreeProxy.freeProxyRay01)
+
+    # CheckProxy.freeProxyRay01()
