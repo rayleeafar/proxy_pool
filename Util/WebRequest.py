@@ -16,7 +16,7 @@ from requests.models import Response
 import requests
 import random
 import time
-
+from selenium import webdriver
 
 class WebRequest(object):
     def __init__(self, *args, **kwargs):
@@ -74,6 +74,41 @@ class WebRequest(object):
                 if any(f in html.content for f in retry_flag):
                     raise Exception
                 return html
+            except Exception as e:
+                print(e)
+                retry_time -= 1
+                if retry_time <= 0:
+                    # 多次请求失败
+                    resp = Response()
+                    resp.status_code = 200
+                    return resp
+                time.sleep(retry_interval)
+    def selenium_get(self, url, header=None, retry_time=5, timeout=30,
+            retry_flag=list(), retry_interval=5,*args, **kwargs):
+        """
+        get method
+        :param url: target url
+        :param header: headers
+        :param retry_time: retry time when network error
+        :param timeout: network timeout
+        :param retry_flag: if retry_flag in content. do retry
+        :param retry_interval: retry interval(second)
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        headers = self.header
+        if header and isinstance(header, dict):
+            headers.update(header)
+        # for k,v in headers.items():
+        #     self.options.add_argument('='.join([k,v]))
+        # while True:
+            try:
+                self.driver.get(url)
+                html_text = self.driver.page_source
+                if any(f in html_text for f in retry_flag):
+                    raise Exception
+                return html_text 
             except Exception as e:
                 print(e)
                 retry_time -= 1

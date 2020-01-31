@@ -14,6 +14,8 @@
 import re
 import sys
 import requests
+import traceback
+import time
 from time import sleep
 
 sys.path.append('..')
@@ -250,20 +252,88 @@ class GetFreeProxy(object):
     @staticmethod
     def freeProxyRay01(page_count=1):
         """
-        http://www.xsdaili.com/index.php?s=/index/index.html
+        http://www.xsdaili.com/dayProxy/2020/1/1.html
         免费代理库
         /html/body/div[5]/div/div[2]/div/div/div/div[2]/div/div[2]/div[1]/div[1]/a
         :return:
         """
-        url = 'http://www.xsdaili.com/index.php?s=/index/index.html'
-        print("Ray01")
-        html_tree = getHtmlTree(url)
-        print(html_tree)
-        for aurl in enumerate(html_tree.xpath("//a/@href")):
-            if "dayProxy" not in aurl:
-                continue
-            print(aurl)
-            yield aurl.strip()
+        try:
+            base_url = 'http://www.xsdaili.com'
+            nowt = time.localtime(time.time())
+            url = '{}/dayProxy/{}/{}/1.html'.format(base_url,nowt.tm_year,nowt.tm_mon)
+            html_tree = getHtmlTree(url)
+            today_urls = []
+            for aurl in html_tree.xpath("//a"):
+                if isinstance(aurl.text,str) and "代理IP" in aurl.text and time.strftime("%Y年%m月%d日",nowt) in aurl.text:
+                    today_urls.append('/'.join([base_url.strip('/'),aurl.attrib['href'].strip('/')]))
+            for purl in today_urls:
+                html_tree = getHtmlTree(purl)
+                for abr in html_tree.xpath("//br"):
+                    try:
+                        searchObj = re.search('[1-9]{1}[0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5}', abr.tail.strip())
+                        if searchObj:
+                            yield searchObj.group()
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        
+    @staticmethod  
+    def freeProxyRay02(page_count=10):
+            """
+            https://www.7yip.cn/free/
+            :return:
+            """
+            url = 'https://www.7yip.cn/free/?action=china&page={}'
+            
+            for page_num in range(1,page_count+1):
+                tree = getHtmlTree(url.format(page_num))
+                td_list = tree.xpath('//table/tbody/tr/td')
+                try:
+                    ip,port = None,None
+                    for td_tag in td_list:
+                        if td_tag.attrib['data-title'] == 'IP':
+                            ip = td_tag.text.strip()
+                        elif td_tag.attrib['data-title'] == 'PORT':
+                            port = td_tag.text.strip()
+                        else:
+                            continue
+                        if ip and port:
+                            ip,port = None,None
+                            yield ':'.join([ip,port])
+                except Exception as e:
+                    pass
+
+    @staticmethod
+    def freeProxyRay03(page_count=1):
+            """
+            https://www.zdaye.com
+            免费代理库
+            :return:
+            """
+            try:
+                base_url = 'https://www.zdaye.com'
+                nowt = time.localtime(time.time())
+                url = '{}/dayProxy.html'.format(base_url)
+                html_tree = seleniumGetHtmlTree(url)
+                today_urls = []
+                a_list = html_tree.xpath("//a")
+                ts_str = "{}年{}月{}日".format(nowt.tm_year,nowt.tm_mon,nowt.tm_mday)
+                for aurl in a_list:
+                    if isinstance(aurl.text,str) and "代理IP" in aurl.text and ts_str in aurl.text:
+                        today_urls.append('/'.join([base_url.strip('/'),aurl.attrib['href'].strip('/')]))
+                for purl in today_urls:
+                    html_tree = seleniumGetHtmlTree(purl)
+                    for abr in html_tree.xpath("//br"):
+                        try:
+                            searchObj = re.search('[1-9]{1}[0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}:[0-9]{1,5}', abr.tail.strip())
+                            if searchObj:
+                                yield searchObj.group()
+                        except Exception:
+                            pass
+            except Exception:
+                print(traceback.format_exc())
+                pass
 
     # @staticmethod
     # def freeProxy10():
